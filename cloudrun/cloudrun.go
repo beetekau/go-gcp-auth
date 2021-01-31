@@ -3,8 +3,10 @@ package RUN
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/url"
+	"os"
 
 	"github.com/beetekau/go-gcp-auth/gcp"
 	"golang.org/x/oauth2/google"
@@ -18,7 +20,15 @@ func Get(URL string, results interface{}) error {
 	}
 	ctx := context.Background()
 	targetAudience := u.Scheme + "://" + u.Hostname()
-	credentials, err := google.FindDefaultCredentials(ctx)
+	key := os.Getenv("SERVICE_KEY_FILE")
+	if key == "" {
+		return errors.New("invalid SERVICE_KEY_FILE")
+	}
+	keyValue, err := ioutil.ReadFile(key)
+	if err != nil {
+		return err
+	}
+	credentials, err := google.CredentialsFromJSON(ctx, keyValue)
 	if err != nil {
 		return err
 	}
